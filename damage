@@ -1,0 +1,74 @@
+local player = game:GetService("Players").LocalPlayer
+local guiPath = player:WaitForChild("PlayerGui"):WaitForChild("HUD")
+    :WaitForChild("HolderBottom"):WaitForChild("GeneralNotifications")
+local players = game:GetService("Players")
+local seenMessages = {}
+
+local function findPlayerByDisplayName(displayName)
+    for _, target in pairs(players:GetPlayers()) do
+        if target.DisplayName == displayName then
+            return target
+        end
+    end
+    return nil
+end
+
+local function extractPlayerNames(text)
+    local attacker, victim = text:match("([%w%s]+) Damaged ([%w%s]+)")
+    return attacker, victim
+end
+
+local function highlightPlayer(player)
+    if player.Character then
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = player.Character
+        highlight.FillColor = Color3.fromRGB(100, 0, 0) -- Темно-красный
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0) -- Ярко-красный
+        
+        task.delay(0.5, function()
+            highlight:Destroy()
+        end)
+    end
+end
+
+local function processNotification(text)
+    if not seenMessages[text] then
+        seenMessages[text] = true
+        print(text)
+        
+        local _, victimDisplayName = extractPlayerNames(text)
+        if victimDisplayName then
+            local victimPlayer = findPlayerByDisplayName(victimDisplayName)
+            if victimPlayer then
+                highlightPlayer(victimPlayer)
+            end
+        end
+    end
+end
+
+local function checkTextLabels()
+    for _, notif in ipairs(guiPath:GetChildren()) do
+        if notif:IsA("Frame") and notif:FindFirstChild("TextLabel") then
+            local text = notif.TextLabel.Text
+            if text ~= "SUB DAMAGED DYLAN" then
+                processNotification(text)
+            end
+        end
+    end
+end
+
+-- Следим за новыми уведомлениями
+local function onChildAdded(child)
+    if child:IsA("Frame") and child:FindFirstChild("TextLabel") then
+        local text = child.TextLabel.Text
+        if text ~= "SUB DAMAGED DYLAN" then
+            processNotification(text)
+        end
+    end
+end
+
+guiPath.ChildAdded:Connect(onChildAdded)
+while true do
+    checkTextLabels()
+    wait(0.1) -- Проверяем каждые 0.1 секунды
+end
