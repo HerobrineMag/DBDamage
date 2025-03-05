@@ -70,5 +70,5 @@ end
 guiPath.ChildAdded:Connect(onChildAdded)
 while true do
     checkTextLabels()
-    wait(0.1) -- Проверяем каждые 0.1 секунды
+    wait(0.01) -- Проверяем каждые 0.1 секунды
 end
